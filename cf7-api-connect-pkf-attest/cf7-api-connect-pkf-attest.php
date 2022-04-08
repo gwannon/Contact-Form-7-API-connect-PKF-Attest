@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Contact Form 7 + PKF Attest
  * Plugin URI:  https://www.merkatu.com/
- * Description: Conexión entre Contact Form 7 y la API de PKF Attest
+ * Description: Conexión entre Contact Form 7 y la API de PKF Attest usando los shortocdes [curso id="xxx"] (en el formulario) e [infocurso] en el mail
  * Version:     1.0
  * Author:      MERKATU
  * Author URI:  https://www.merkatu.com/
@@ -37,9 +37,9 @@ function cf7_pkf_attest_plugin_activation() {
 }
 
 //HOOK de CF/
-add_action("wpcf7_before_send_mail", "wpcf7_do_cf7_pkf_attest");
+add_action("wpcf7_before_send_mail", "cf7_pkf_attest_before_send_mail");
 
-function wpcf7_do_cf7_pkf_attest(&$wpcf7_data) {
+function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
   //$wpcf7 = WPCF7_ContactForm::get_current();
   //if(!in_array($wpcf7_data->id, CF7_PKF_ATTEST_CFORMS)) return; //Chequeamos que sea uno de los formualrios aceptados
   $submission = WPCF7_Submission::get_instance();
@@ -81,3 +81,49 @@ function wpcf7_do_cf7_pkf_attest(&$wpcf7_data) {
   $response = insertLead(json_encode($json));
   print_r($response);
 }
+
+// Activate shortcodes inside contact-form-7 forms and mails
+add_filter( 'wpcf7_form_elements', 'cf7_pkf_attest_shortcodes_in_forms' );
+function cf7_pkf_attest_shortcodesin_forms( $form ) {
+  $form = do_shortcode($form);
+  return $form;
+}
+
+add_filter( 'wpcf7_special_mail_tags', 'cf7_pkf_attest_shortcodes_in_mails', 10, 3 );
+function cf7_pkf_attest_shortcodes_in_mails( $output, $name, $html ) {
+  if ('infocurso' == $name)$output = do_shortcode( "[$name]" );
+  return $output;
+}
+
+//Validate form
+function cf7_pkf_attest_validate_form ( $result, $tags ) {
+	$submission = WPCF7_Submission::get_instance();
+	$formdata = $submission->get_posted_data();
+	if( isset($formdata['pkf_attest_id']) && $formdata['pkf_attest_id'] > 0) { //Chequeamos que tenga id de curso
+		/*if($formdata['segunda-compra-tienda'] == $formdata['primera-compra-tienda']) {
+			$result->invalidate('segunda-compra-tienda', 'Los tickets deben ser de diferentes tiendas.');
+		}*/
+	}
+	return $result;
+}
+add_filter('wpcf7_validate', 'cf7_pkf_attest_validate_form', 10, 2 );
+
+
+//Shortcodes for contact-form-7
+function cf7_pkf_attest_shortcode_form($params = array(), $content = null) {
+  ob_start(); ?>
+    <input type="text" name="pkf_attest_id" value="hola <?php echo $params['id']; ?>" />
+  <?php $html = ob_get_clean(); 
+  return $html;
+}
+add_shortcode('curso', 'cf7_pkf_attest_shortcode_form');
+
+function cf7_pkf_attest_shortcode_mail($params = array(), $content = null) {
+  $submission = WPCF7_Submission::get_instance();
+  $formdata = $submission->get_posted_data();
+  ob_start(); ?>
+    <?php print_r ($formdata); ?>
+  <?php $html = ob_get_clean(); 
+  return $html;
+}
+add_shortcode('infocurso', 'cf7_pkf_attest_shortcode_mail');
