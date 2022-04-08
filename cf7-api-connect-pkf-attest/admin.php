@@ -23,5 +23,6 @@ function cf7_pkf_attest_page_settings() {
 		<input type="text" name="_cf7_pkf_attest_api_user" value="<?php echo get_option("_cf7_pkf_attest_api_user"); ?>" /><br/><br/>
 		<h2><?php _e("Contraseña de la API", 'cf7_pkf_attest'); ?>:</h2>
 		<input type="password" name="_cf7_pkf_attest_api_password" value="" /><br/><br/>
+		<input type="submit" name="send" value="Enviar" />
 	<?php
 }

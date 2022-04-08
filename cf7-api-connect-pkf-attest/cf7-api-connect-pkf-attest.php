@@ -84,7 +84,7 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
 
 // Activate shortcodes inside contact-form-7 forms and mails
 add_filter( 'wpcf7_form_elements', 'cf7_pkf_attest_shortcodes_in_forms' );
-function cf7_pkf_attest_shortcodesin_forms( $form ) {
+function cf7_pkf_attest_shortcodes_in_forms( $form ) {
   $form = do_shortcode($form);
   return $form;
 }
@@ -111,8 +111,47 @@ add_filter('wpcf7_validate', 'cf7_pkf_attest_validate_form', 10, 2 );
 
 //Shortcodes for contact-form-7
 function cf7_pkf_attest_shortcode_form($params = array(), $content = null) {
-  ob_start(); ?>
-    <input type="text" name="pkf_attest_id" value="hola <?php echo $params['id']; ?>" />
+  ob_start();
+  $curso = getCurso($params['id']); ?>
+  <div id="inscripcion_pkf">
+    <?php if ($curso->plazasDisponibles > 0) {
+
+
+
+
+      } else {
+        echo "<h1 class='noplazas'>".__("No hay plazas disponibles", 'cf7_pkf_attest')."</h1>";
+      }
+    /* stdClass Object (
+        [formatoAsistencia] => 0
+        [gratuito] => 
+        [preReserva] => 1
+        [aPlazos] => 
+        [plazasDisponibles] => 0
+        [formasPago] => Array
+            (
+                [0] => stdClass Object
+                    (
+                        [formaPago] => GIRO-CONTA
+                        [descripcion] => Pago único mediante cargo en cuenta
+                        [exigeCuenta] => 1
+                        [aPlazos] => 
+                    )
+
+                [1] => stdClass Object
+                    (
+                        [formaPago] => TRANFEREN
+                        [descripcion] => Pago único mediante transferencia
+                        [exigeCuenta] => 
+                        [aPlazos] => 
+                    )
+
+            )
+
+    ) */
+    
+    ?>
+  </div>
   <?php $html = ob_get_clean(); 
   return $html;
 }
