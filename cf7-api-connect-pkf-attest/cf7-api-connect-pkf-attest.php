@@ -52,7 +52,9 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
   $formdata = $submission->get_posted_data();
 
   if(isset($formdata['pkf_attest_id'])) {
-    print_r($formdata);
+    //print_r($formdata);
+
+    $curso = getCurso($formdata['pkf_attest_id']);
 
     //Formato del JSON -------------------------------------------------------------------------
     $json = [
@@ -85,9 +87,18 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
       "email" => $formdata['pkf_attest_receptor_email'],
       "municipio" => $formdata['pkf_attest_receptor_ciudad'],
     ];
-    print_r($json);
+
+    /*if ($curso->gratuito) {
+      unset($json['receptor']);
+      unset($json['formaPago']);
+      unset($json['iban']);
+      unset($json['aPlazos']);
+      unset($json['alumnoComoPagador']);
+    }*/
+
+    //print_r($json);
     $response = insertLead(json_encode($json));
-    print_r($response);
+    //print_r($response);
   }
 }
 
@@ -156,14 +167,15 @@ add_filter('wpcf7_validate', 'cf7_pkf_attest_validate_form', 10, 2 );
 //Shortcodes for contact-form-7
 function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
   ob_start();
-  $curso = getCurso($params['id']); ?>
+  $curso = getCurso($params['id']); 
+  //print_r($curso); ?>
   <div id="inscripcion_pkf">
     [hidden pkf_attest_id "<?=$params['id'] ?>"]
     <?php if ($curso->plazasDisponibles > 0  ) {
-      if($curso->preReserva) {
+      if(!$curso->preReserva) {
         //print_r($curso);
         //TODO. Las formas de pago varian según se elige al contado o a plazos.
-        //TODO. Revisar si es un curso gratuito
+        //TODO. Revisar si es un curso gratuito y lo de la preserva
         if ($curso->formatoAsistencia == 2) { ?>
           <label><?php _e("Asistencia al curso", 'cf7_pkf_attest'); ?>
           [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial", 'cf7_pkf_attest'); ?>|0"]</label>
@@ -202,43 +214,46 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
           <label><?php _e("Email", 'cf7_pkf_attest'); ?>
           [email* pkf_attest_estudiante_email placeholder "<?php _e("Email", 'cf7_pkf_attest'); ?>"]</label>
         </div>
-        <script>
-          //jQuery(document).ready(function() {
-            jQuery("input[name='pkf_attest_estudiante_como_pagador[]']").click(function() {
-              console.log("click");
-              if(jQuery(this).is(":checked")) {
-                jQuery("#inscripcion_pkf_receptor").fadeOut(200);
-              } else {
-                jQuery("#inscripcion_pkf_receptor").fadeIn(300);
-              }
-            });
-         // });
-        </script>
-        [checkbox pkf_attest_estudiante_como_pagador use_label_element default:1 "<?php _e("Los datos para facturar son los de la persona a inscribir.", 'cf7_pkf_attest'); ?>|1"]
-        <div id='inscripcion_pkf_receptor' style='display: none;'>
-          <p><b><?php _e("Datos de facturación", 'cf7_pkf_attest'); ?></b></p>
-          <label><?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>
-          [text pkf_attest_receptor_nombre placeholder "<?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>"]</label>
-          <label><?php _e("Fecha de nacimiento", 'cf7_pkf_attest'); ?>
-          [date pkf_attest_receptor_fecha_nacimiento]</label>
-          <label><?php _e("Tipo de identifcación", 'cf7_pkf_attest'); ?>
-          [select pkf_attest_receptor_tipo_identidad "DNI|0" "NIF|1" "NIE|4"]</label>
-          <label><?php _e("Número de identificación", 'cf7_pkf_attest'); ?>
-          [text pkf_attest_receptor_identidad placeholder "<?php _e("Número de identificación", 'cf7_pkf_attest'); ?>"]</label>
-          <label><?php _e("Domicilio", 'cf7_pkf_attest'); ?>
-          [text pkf_attest_receptor_direccion placeholder "<?php _e("Domicilio", 'cf7_pkf_attest'); ?>"]</label>
-          <label><?php _e("CP", 'cf7_pkf_attest'); ?>
-          [text pkf_attest_receptor_cp placeholder "<?php _e("CP", 'cf7_pkf_attest'); ?>"]</label>
-          <label><?php _e("Municipio", 'cf7_pkf_attest'); ?>
-          [text pkf_attest_receptor_ciudad placeholder "<?php _e("Municipio", 'cf7_pkf_attest'); ?>"]</label>
-          <label><?php _e("Teléfono", 'cf7_pkf_attest'); ?>
-          [tel pkf_attest_receptor_telefono placeholder "<?php _e("Teléfono", 'cf7_pkf_attest'); ?>"]</label>
-          <label><?php _e("Email", 'cf7_pkf_attest'); ?>
-          [email pkf_attest_receptor_email placeholder "<?php _e("Email", 'cf7_pkf_attest'); ?>"]</label>
-        </div>
+        <?php if (!$curso->gratuito) { ?>ddddddddddd
+          <script>
+            jQuery(document).ready(function() {
+              jQuery("input[name='pkf_attest_estudiante_como_pagador[]']").click(function() {
+                console.log("click");
+                if(jQuery(this).is(":checked")) {
+                  jQuery("#inscripcion_pkf_receptor").fadeOut(200);
+                } else {
+                  jQuery("#inscripcion_pkf_receptor").fadeIn(300);
+                }
+              });
+           });
+          </script>
+          [checkbox pkf_attest_estudiante_como_pagador use_label_element default:1 "<?php _e("Los datos para facturar son los de la persona a inscribir.", 'cf7_pkf_attest'); ?>|1"]
+          <div id='inscripcion_pkf_receptor' style='display: none;'>
+            <p><b><?php _e("Datos de facturación", 'cf7_pkf_attest'); ?></b></p>
+            <label><?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>
+            [text pkf_attest_receptor_nombre placeholder "<?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>"]</label>
+            <label><?php _e("Fecha de nacimiento", 'cf7_pkf_attest'); ?>
+            [date pkf_attest_receptor_fecha_nacimiento]</label>
+            <label><?php _e("Tipo de identifcación", 'cf7_pkf_attest'); ?>
+            [select pkf_attest_receptor_tipo_identidad "DNI|0" "NIF|1" "NIE|4"]</label>
+            <label><?php _e("Número de identificación", 'cf7_pkf_attest'); ?>
+            [text pkf_attest_receptor_identidad placeholder "<?php _e("Número de identificación", 'cf7_pkf_attest'); ?>"]</label>
+            <label><?php _e("Domicilio", 'cf7_pkf_attest'); ?>
+            [text pkf_attest_receptor_direccion placeholder "<?php _e("Domicilio", 'cf7_pkf_attest'); ?>"]</label>
+            <label><?php _e("CP", 'cf7_pkf_attest'); ?>
+            [text pkf_attest_receptor_cp placeholder "<?php _e("CP", 'cf7_pkf_attest'); ?>"]</label>
+            <label><?php _e("Municipio", 'cf7_pkf_attest'); ?>
+            [text pkf_attest_receptor_ciudad placeholder "<?php _e("Municipio", 'cf7_pkf_attest'); ?>"]</label>
+            <label><?php _e("Teléfono", 'cf7_pkf_attest'); ?>
+            [tel pkf_attest_receptor_telefono placeholder "<?php _e("Teléfono", 'cf7_pkf_attest'); ?>"]</label>
+            <label><?php _e("Email", 'cf7_pkf_attest'); ?>
+            [email pkf_attest_receptor_email placeholder "<?php _e("Email", 'cf7_pkf_attest'); ?>"]</label>
+          </div>
+        <?php } ?>
+
         [submit "<?php _e("Enviar", 'cf7_pkf_attest'); ?>"]<?php 
-      } else { ?><h1 class='nopreserva'><?php _e("No admite preserva", 'cf7_pkf_attest'); ?></h1><?php }
-    } else { ?><h1 class='noplazas'><?php _e("No hay plazas disponibles", 'cf7_pkf_attest'); ?></h1><?php } ?>
+      } else { ?><p class='nopreserva'><b><?php _e("No admite preserva", 'cf7_pkf_attest'); ?></b></p><?php }
+    } else { ?><p class='noplazas'><b><?php _e("No hay plazas disponibles", 'cf7_pkf_attest'); ?></b></p><?php } ?>
   </div>
   <style><?php echo preg_replace("/(\t|\n)+/", "", stripslashes(get_option("_cf7_pkf_attest_css"))); ?></style>
   <?php $html = ob_get_clean(); 
