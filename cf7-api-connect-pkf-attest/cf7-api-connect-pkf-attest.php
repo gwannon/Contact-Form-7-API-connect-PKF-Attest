@@ -40,116 +40,131 @@ function cf7_pkf_attest_plugin_activation() {
 add_action("wpcf7_before_send_mail", "cf7_pkf_attest_before_send_mail");
 
 function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
-  //$wpcf7 = WPCF7_ContactForm::get_current();
-  //if(!in_array($wpcf7_data->id, CF7_PKF_ATTEST_CFORMS)) return; //Chequeamos que sea uno de los formualrios aceptados
   $submission = WPCF7_Submission::get_instance();
   $formdata = $submission->get_posted_data();
-  //print_r($formdata);
 
-  //Formato del JSON -------------------------------------------------------------------------
-  $json = [
-    "idAccionFormativa" => false,
-    "formatoAsistencia" => false,
-    "formaPago" => false,
-    "iban" => false,
-    "aPlazos" => false,
-    "alumnoComoPagador" => false,
-    "contacto" => [
-      "nombre" => false,
-      "tipoIdentificador" => false,
-      "dni" => false,
-      "fechaNac" => false,
-      "direccion" => false,
-      "email" => false,
-      "tel1" => false,
-      "cp" => false,
-      "municipio" => false
-    ],
-    "receptor" => [
-      "razonSocial" => false,
-      "tipoIdentificador" => false,
-      "numIdentificador" => false,
-      "domicilio" => false,
-      "cp" => false,
-      "telefono1" => false,
-      "email" => false,
-      "municipio" => false,
-    ]
-  ];
-  
-  //echo $json."\n----------------------------\n";
-  $response = insertLead(json_encode($json));
-  print_r($response);
+  if(isset($formdata['pkf_attest_id'])) {
+    //print_r($formdata);
+
+    //Formato del JSON -------------------------------------------------------------------------
+    $json = [
+      "idAccionFormativa" => $formdata['pkf_attest_id'],
+      "formatoAsistencia" => $formdata['pkf_attest_asistencia'][0],
+      "formaPago" => $formdata['pkf_attest_pago'][0],
+      "iban" => $formdata['pkf_attest_iban'],
+      "aPlazos" => ($formdata['pkf_attest_plazos'][0] == 1 ? true : false),
+      "alumnoComoPagador" => $formdata['pkf_attest_estudiante_como_pagador'][0],
+      "contacto" => [
+        "nombre" => $formdata['pkf_attest_estudiante_nombre'],
+        "tipoIdentificador" => $formdata['pkf_attest_estudiante_tipo_identidad'][0],
+        "dni" => $formdata['pkf_attest_estudiante_identidad'],
+        "fechaNac" => $formdata['pkf_attest_estudiante_fecha_nacimiento'],
+        "direccion" => $formdata['pkf_attest_estudiante_direccion'],
+        "email" => $formdata['pkf_attest_estudiante_email'],
+        "tel1" => $formdata['pkf_attest_estudiante_telefono'],
+        "cp" => $formdata['pkf_attest_estudiante_cp'],
+        "municipio" => $formdata['pkf_attest_estudiante_ciudad']
+      ]
+    ];
+
+    if($formdata['pkf_attest_estudiante_como_pagador'][0]) $json['receptor'] = [
+      "razonSocial" =>  $formdata['pkf_attest_receptor_nombre'],
+      "tipoIdentificador" =>  $formdata['pkf_attest_receptor_tipo_identidad'][0],
+      "numIdentificador" =>  $formdata['pkf_attest_receptor_identidad'],
+      "domicilio" =>  $formdata['pkf_attest_receptor_direccion'],
+      "cp" =>  $formdata['pkf_attest_receptor_cp'],
+      "telefono1" =>  $formdata['pkf_attest_receptor_telefono'],
+      "email" =>  $formdata['pkf_attest_receptor_email'],
+      "municipio" =>  $formdata['pkf_attest_receptor_ciudad'],
+    ];
+    print_r($json);
+    $response = insertLead(json_encode($json));
+    print_r($response);
+  }
 }
 
 // Activate shortcodes inside contact-form-7 forms and mails
-add_filter( 'wpcf7_form_elements', 'cf7_pkf_attest_shortcodes_in_forms' );
+add_filter( 'wpcf7_contact_form_properties', 'cf7_pkf_attest_shortcodes_in_forms' );
 function cf7_pkf_attest_shortcodes_in_forms( $form ) {
-  $form = do_shortcode($form);
+  if (!is_admin()) $form['form'] = do_shortcode($form['form']);
   return $form;
 }
 
 add_filter( 'wpcf7_special_mail_tags', 'cf7_pkf_attest_shortcodes_in_mails', 10, 3 );
 function cf7_pkf_attest_shortcodes_in_mails( $output, $name, $html ) {
-  if ('infocurso' == $name)$output = do_shortcode( "[$name]" );
+  if ('curso_allinfo' == $name)$output = do_shortcode( "[$name]" );
   return $output;
 }
 
 //Validate form
 function cf7_pkf_attest_validate_form ( $result, $tags ) {
-	$submission = WPCF7_Submission::get_instance();
-	$formdata = $submission->get_posted_data();
-	if( isset($formdata['pkf_attest_id']) && $formdata['pkf_attest_id'] > 0) { //Chequeamos que tenga id de curso
-		/*if($formdata['segunda-compra-tienda'] == $formdata['primera-compra-tienda']) {
-			$result->invalidate('segunda-compra-tienda', 'Los tickets deben ser de diferentes tiendas.');
-		}*/
-	}
-	return $result;
+  $submission = WPCF7_Submission::get_instance();
+  $formdata = $submission->get_posted_data();
+  //print_r($tags);
+  if( isset($formdata['pkf_attest_id']) && $formdata['pkf_attest_id'] > 0) { //Chequeamos que tenga id de curso
+    if($formdata['pkf_attest_plazos'] != 'sadasdasd') {
+      //$result->invalidate('pkf_attest_plazos', 'Los tickets deben ser de diferentes tiendas.');
+    }
+  }
+  //print_r($result);
+  return $result;
 }
 add_filter('wpcf7_validate', 'cf7_pkf_attest_validate_form', 10, 2 );
 
 
 //Shortcodes for contact-form-7
-function cf7_pkf_attest_shortcode_form($params = array(), $content = null) {
+function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
   ob_start();
   $curso = getCurso($params['id']); ?>
   <div id="inscripcion_pkf">
-    <?php if ($curso->plazasDisponibles > 0) {
+    [hidden pkf_attest_id "<?=$params['id'] ?>"]
+    <?php 
+      if ($curso->plazasDisponibles > 0  ) {
+        if($curso->preReserva) {
+          //print_r($curso);
+          $html = '';
+          if ($curso->formatoAsistencia == 2) $html .= '[select pkf_attest_asistencia "Presencial|0" "No presencial|0"]'."\n";
+          else $html .= '[hidden pkf_attest_asistencia "'.$curso->formatoAsistencia.'"]';
+          if (!$curso->gratuito) {
+            if ($curso->aPlazos) $html .= '[select pkf_attest_plazos "A plazos|1" "Al contado|0"]'."\n";
+            foreach ($curso->formasPago as $forma) {
+              $formas[] = $forma->descripcion."|".$forma->formaPago;
+            }
+            $html .= '[select* pkf_attest_pago "'.implode ('" "', $formas).'"]'."\n";
+            $html .= '[text* pkf_attest_iban placeholder "IBAN de la cuenta"]'."\n";
+          }
+          
 
+          $html .= "<h2>Datos del alumno</h2>";
+          $html .= '[text* pkf_attest_estudiante_nombre placeholder "Nombre y apellidos"]'."\n";
+          $html .= '[date* pkf_attest_estudiante_fecha_nacimiento]'."\n";
+          $html .= '[select pkf_attest_estudiante_tipo_identidad "DNI|0" "NIF|1" "NIE|4"]'."\n";
+          $html .= '[text* pkf_attest_estudiante_identidad placeholder "Número de identificación"]'."\n";
+          $html .= '[text* pkf_attest_estudiante_direccion placeholder "Domicilio"]'."\n";
+          $html .= '[text* pkf_attest_estudiante_cp placeholder "CP"]'."\n";
+          $html .= '[tel* pkf_attest_estudiante_telefono placeholder "Telefono"]'."\n";
+          $html .= '[email* pkf_attest_estudiante_email placeholder "Email"]'."\n";
+          $html .= '[text* pkf_attest_estudiante_ciudad placeholder "Municipio"]'."\n";
 
+          $html .= '[checkbox pkf_attest_estudiante_como_pagador "true"] Los datos para facturar son los de la persona a inscribir.'."\n";
+          $html .= "<h2>Datos de facturación</h2>";
+          $html .= '[text* pkf_attest_receptor_nombre placeholder "Nombre y apellidos"]'."\n";
+          $html .= '[date* pkf_attest_receptor_fecha_nacimiento]'."\n";
+          $html .= '[select pkf_attest_receptor_tipo_identidad "DNI|0" "NIF|1" "NIE|4"]'."\n";
+          $html .= '[text* pkf_attest_receptor_identidad placeholder "Número de identificación"]'."\n";
+          $html .= '[text* pkf_attest_receptor_direccion placeholder "Domicilio"]'."\n";
+          $html .= '[text* pkf_attest_receptor_cp placeholder "CP"]'."\n";
+          $html .= '[tel* pkf_attest_receptor_telefono placeholder "Telefono"]'."\n";
+          $html .= '[email* pkf_attest_receptor_email placeholder "Email"]'."\n";
+          $html .= '[text* pkf_attest_receptor_ciudad placeholder "Municipio"]'."\n";
 
-
+          echo $html.'[submit "Enviar"]';
+        } else {
+          echo "<h1 class='nopreserva'>".__("No admite preserva", 'cf7_pkf_attest')."</h1>";
+        }
       } else {
         echo "<h1 class='noplazas'>".__("No hay plazas disponibles", 'cf7_pkf_attest')."</h1>";
       }
-    /* stdClass Object (
-        [formatoAsistencia] => 0
-        [gratuito] => 
-        [preReserva] => 1
-        [aPlazos] => 
-        [plazasDisponibles] => 0
-        [formasPago] => Array
-            (
-                [0] => stdClass Object
-                    (
-                        [formaPago] => GIRO-CONTA
-                        [descripcion] => Pago único mediante cargo en cuenta
-                        [exigeCuenta] => 1
-                        [aPlazos] => 
-                    )
-
-                [1] => stdClass Object
-                    (
-                        [formaPago] => TRANFEREN
-                        [descripcion] => Pago único mediante transferencia
-                        [exigeCuenta] => 
-                        [aPlazos] => 
-                    )
-
-            )
-
-    ) */
-    
     ?>
   </div>
   <?php $html = ob_get_clean(); 
@@ -161,8 +176,10 @@ function cf7_pkf_attest_shortcode_mail($params = array(), $content = null) {
   $submission = WPCF7_Submission::get_instance();
   $formdata = $submission->get_posted_data();
   ob_start(); ?>
-    <?php print_r ($formdata); ?>
+    <?php foreach ($formdata as $label => $value){
+      echo str_replace("_", " ", str_replace("pkf_attest_", "", $label)).": ".(is_array($value) ? $value[0] : $value)."\n";
+    } ?>
   <?php $html = ob_get_clean(); 
   return $html;
 }
-add_shortcode('infocurso', 'cf7_pkf_attest_shortcode_mail');
+add_shortcode('curso_allinfo', 'cf7_pkf_attest_shortcode_mail');
