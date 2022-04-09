@@ -44,7 +44,7 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
   $formdata = $submission->get_posted_data();
 
   if(isset($formdata['pkf_attest_id'])) {
-    //print_r($formdata);
+    print_r($formdata);
 
     //Formato del JSON -------------------------------------------------------------------------
     $json = [
@@ -53,7 +53,7 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
       "formaPago" => $formdata['pkf_attest_pago'][0],
       "iban" => $formdata['pkf_attest_iban'],
       "aPlazos" => ($formdata['pkf_attest_plazos'][0] == 1 ? true : false),
-      "alumnoComoPagador" => $formdata['pkf_attest_estudiante_como_pagador'][0],
+      "alumnoComoPagador" => ($formdata['pkf_attest_estudiante_como_pagador'][0] == 1 ? "true" : "false"),
       "contacto" => [
         "nombre" => $formdata['pkf_attest_estudiante_nombre'],
         "tipoIdentificador" => $formdata['pkf_attest_estudiante_tipo_identidad'][0],
@@ -67,7 +67,7 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
       ]
     ];
 
-    if($formdata['pkf_attest_estudiante_como_pagador'][0]) $json['receptor'] = [
+    if($formdata['pkf_attest_estudiante_como_pagador'][0] != 1) $json['receptor'] = [
       "razonSocial" =>  $formdata['pkf_attest_receptor_nombre'],
       "tipoIdentificador" =>  $formdata['pkf_attest_receptor_tipo_identidad'][0],
       "numIdentificador" =>  $formdata['pkf_attest_receptor_identidad'],
@@ -146,7 +146,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
           $html .= '[email* pkf_attest_estudiante_email placeholder "Email"]'."\n";
           $html .= '[text* pkf_attest_estudiante_ciudad placeholder "Municipio"]'."\n";
 
-          $html .= '[checkbox pkf_attest_estudiante_como_pagador "true"] Los datos para facturar son los de la persona a inscribir.'."\n";
+          $html .= '[checkbox pkf_attest_estudiante_como_pagador use_label_element "Los datos para facturar son los de la persona a inscribir.|1"] '."\n";
           $html .= "<h2>Datos de facturación</h2>";
           $html .= '[text* pkf_attest_receptor_nombre placeholder "Nombre y apellidos"]'."\n";
           $html .= '[date* pkf_attest_receptor_fecha_nacimiento]'."\n";
