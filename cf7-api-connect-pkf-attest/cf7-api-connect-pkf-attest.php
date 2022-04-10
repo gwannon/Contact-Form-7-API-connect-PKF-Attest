@@ -111,7 +111,7 @@ function cf7_pkf_attest_shortcodes_in_forms( $form ) {
 
 add_filter( 'wpcf7_special_mail_tags', 'cf7_pkf_attest_shortcodes_in_mails', 10, 3 );
 function cf7_pkf_attest_shortcodes_in_mails( $output, $name, $html ) {
-  if ('curso_allinfo' == $name)$output = do_shortcode( "[$name]" );
+  if ('curso_allinfo' == $name) $output = do_shortcode( "[$name]" );
   return $output;
 }
 
@@ -172,7 +172,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
   <div id="inscripcion_pkf">
     [hidden pkf_attest_id "<?=$params['id'] ?>"]
     <?php if ($curso->plazasDisponibles > 0  ) {
-      if(!$curso->preReserva) {
+      if($curso->preReserva) {
         //print_r($curso);
         //TODO. Las formas de pago varian según se elige al contado o a plazos.
         //TODO. Revisar si es un curso gratuito y lo de la preserva
@@ -214,7 +214,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
           <label><?php _e("Email", 'cf7_pkf_attest'); ?>
           [email* pkf_attest_estudiante_email placeholder "<?php _e("Email", 'cf7_pkf_attest'); ?>"]</label>
         </div>
-        <?php if (!$curso->gratuito) { ?>ddddddddddd
+        <?php if (!$curso->gratuito) { ?>
           <script>
             jQuery(document).ready(function() {
               jQuery("input[name='pkf_attest_estudiante_como_pagador[]']").click(function() {
@@ -250,6 +250,8 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
             [email pkf_attest_receptor_email placeholder "<?php _e("Email", 'cf7_pkf_attest'); ?>"]</label>
           </div>
         <?php } ?>
+
+        <?=$content ?>
 
         [submit "<?php _e("Enviar", 'cf7_pkf_attest'); ?>"]<?php 
       } else { ?><p class='nopreserva'><b><?php _e("No admite preserva", 'cf7_pkf_attest'); ?></b></p><?php }
