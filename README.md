@@ -5,7 +5,32 @@ Ejemplo de Uso:
 
 [curso id="6821"][acceptance politica-privacidad] Acepto la <a href="#">política de privacidad</a>. [/acceptance][/curso]
 
-Para mostrar los datos del formulario simplemente metenos el código corto [curso_allinfo] en el cuerpo del mensaje.
+Para mostrar los datos del formulario simplemente metenos el código corto [curso_allinfo] en el cuerpo del mensaje. Para sacar un dato en concreto podemos usar los siguientes códigos cortos:
+
+* [curso_info_asistencia]
+* [curso_info_plazos]
+* [curso_info_pago]
+* [curso_info_iban]
+* [curso_info_estudiante_nombre]
+* [curso_info_estudiante_fecha_nacimiento]
+* [curso_info_estudiante_tipo_identidad]
+* [curso_info_estudiante_identidad]
+* [curso_info_estudiante_direccion]
+* [curso_info_estudiante_cp]
+* [curso_info_estudiante_ciudad]
+* [curso_info_estudiante_telefono]
+* [curso_info_estudiante_email]
+* [curso_info_receptor_nombre] *
+* [curso_info_receptor_fecha_nacimiento] *
+* [curso_info_receptor_tipo_identidad] *
+* [curso_info_receptor_identidad] *
+* [curso_info_receptor_direccion] *
+* [curso_info_receptor_cp] *
+* [curso_info_receptor_ciudad] *
+* [curso_info_receptor_telefono] *
+* [curso_info_receptor_email] *
+
+En caso de haber datos de l pagador muestra los datos del estudiante*
 
 Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest. Campos:
 
