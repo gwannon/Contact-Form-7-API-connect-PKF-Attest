@@ -112,6 +112,10 @@ function cf7_pkf_attest_shortcodes_in_forms( $form ) {
 add_filter( 'wpcf7_special_mail_tags', 'cf7_pkf_attest_shortcodes_in_mails', 10, 3 );
 function cf7_pkf_attest_shortcodes_in_mails( $output, $name, $html ) {
   if ('curso_allinfo' == $name) $output = do_shortcode( "[$name]" );
+  else if (strpos($name, 'curso_info_') == 0) {
+    $label = str_replace('curso_info_', "", $name);
+    $output = do_shortcode( "[curso_allinfo field='".str_replace('curso_info_', "", $label)."']" );
+  }
   return $output;
 }
 
@@ -178,7 +182,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
         //TODO. Revisar si es un curso gratuito y lo de la preserva
         if ($curso->formatoAsistencia == 2) { ?>
           <label><?php _e("Asistencia al curso", 'cf7_pkf_attest'); ?>
-          [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial", 'cf7_pkf_attest'); ?>|0"]</label>
+          [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial", 'cf7_pkf_attest'); ?>|1"]</label>
         <?php } else  { ?>[hidden pkf_attest_asistencia "<?=$curso->formatoAsistencia ?>"]<?php }
         if (!$curso->gratuito) {
           if ($curso->aPlazos) { ?>
@@ -266,7 +270,17 @@ add_shortcode('curso', 'cf7_pkf_attest_shortcode_form');
 function cf7_pkf_attest_shortcode_mail($params = array(), $content = null) {
   $submission = WPCF7_Submission::get_instance();
   $formdata = $submission->get_posted_data();
-  ob_start(); ?>
+  ob_start(); 
+  if(isset($params['field'])) {
+    if($formdata["pkf_attest_estudiante_como_pagador"]) {
+      $params['field'] = str_replace("receptor", "estudiante", $params['field']);
+    }
+    if($params['field'] == 'asistencia') return ($formdata["pkf_attest_asistencia"] == 1 ? "No presencial" : "Presencial");
+    else if($params['field'] == 'plazos') return ($formdata["pkf_attest_plazos"] == 1 ? "Pago aplazado" : "Al contado");
+    else return (is_array($formdata["pkf_attest_".$params['field']]) ? $formdata["pkf_attest_".$params['field']][0] : $formdata["pkf_attest_".$params['field']]);
+  }
+  
+  ?>
     <?php foreach ($formdata as $label => $value){
       echo str_replace("_", " ", str_replace("pkf_attest_", "", $label)).": ".(is_array($value) ? $value[0] : $value)."\n";
     } ?>
