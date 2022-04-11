@@ -31,7 +31,7 @@ Para mostrar los datos del formulario simplemente metenos el código corto [curs
 * [curso_info_receptor_telefono] *
 * [curso_info_receptor_email] *
 
-En caso de no haber datos del pagador muestra los datos del estudiante*
+En caso de no haber datos del pagador devuelve los datos del estudiante*
 
 Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest. Campos:
 
