@@ -62,7 +62,7 @@ function getCurso($id) { //Consigue los datos de un curso
   } else {
     writeLog ("GET CURSO OK", $id, $response);     
   }
-  return json_decode($response);
+  return array("http_code" => $curl_info['http_code'], "response" => $response);
 }
 
 function writeLog ($title, $data, $response) {

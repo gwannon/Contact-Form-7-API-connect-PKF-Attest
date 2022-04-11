@@ -57,8 +57,9 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data, &$abort, $submission) {
 
   if(isset($formdata['pkf_attest_id'])) {
     //print_r($formdata);
-
-    $curso = getCurso($formdata['pkf_attest_id']);
+    $response = getCurso($formdata['pkf_attest_id']); 
+    $curso = json_decode($response['response']);
+    //print_r($curso);
 
     //Formato del JSON -------------------------------------------------------------------------
     $json = [
@@ -185,7 +186,8 @@ add_filter('wpcf7_validate', 'cf7_pkf_attest_validate_form', 10, 2 );
 //Shortcodes for contact-form-7
 function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
   ob_start();
-  $curso = getCurso($params['id']); 
+  $response = getCurso($params['id']); 
+  $curso = json_decode($response['response']);
   print_r($curso); ?>
   <div id="inscripcion_pkf">
     [hidden pkf_attest_id "<?=$params['id'] ?>"]
