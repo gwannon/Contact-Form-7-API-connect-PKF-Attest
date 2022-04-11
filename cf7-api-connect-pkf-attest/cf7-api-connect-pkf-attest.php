@@ -31,6 +31,9 @@ define( 'WPCF7_AUTOP', false );
 //Cargamos librerías de conexión a la API
 require_once(dirname(__FILE__)."/api.php");
 
+//Cargamos validadores de DNI-NIF-NIE
+require_once(dirname(__FILE__)."/valid-dni-nif-nie.php");
+
 //Cargamos las funciones que crean las páginas en el WP-ADMIN
 require_once(dirname(__FILE__)."/admin.php");
 
@@ -45,10 +48,11 @@ function cf7_pkf_attest_plugin_activation() {
 }
 
 //HOOK de CF/
-add_action("wpcf7_before_send_mail", "cf7_pkf_attest_before_send_mail");
+add_action("wpcf7_before_send_mail", "cf7_pkf_attest_before_send_mail", 10, 3);
 
-function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
-  $submission = WPCF7_Submission::get_instance();
+function cf7_pkf_attest_before_send_mail(&$wpcf7_data, &$abort, $submission) {
+  //print_r($wpcf7_data);
+  //$submission = WPCF7_Submission::get_instance();
   $formdata = $submission->get_posted_data();
 
   if(isset($formdata['pkf_attest_id'])) {
@@ -66,6 +70,7 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
       "alumnoComoPagador" => ($formdata['pkf_attest_estudiante_como_pagador'][0] == 1 ? "true" : "false"),
       "contacto" => [
         "nombre" => $formdata['pkf_attest_estudiante_nombre'],
+        "apellidos" => $formdata['pkf_attest_estudiante_nombre'],
         "tipoIdentificador" => $formdata['pkf_attest_estudiante_tipo_identidad'][0],
         "dni" => strtoupper($formdata['pkf_attest_estudiante_identidad']),
         "fechaNac" => $formdata['pkf_attest_estudiante_fecha_nacimiento'],
@@ -98,7 +103,13 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
 
     //print_r($json);
     $response = insertLead(json_encode($json));
-    //print_r($response);
+    //print_r ($response);
+    if(isset($response['http_code']) && $response['http_code'] != '200') {
+      $abort = true; //==> Here, it is with 'called by reference' since CF7-v5.0 :)
+      $submission->set_status( 'validation_failed' );
+      //$submission->set_response( $cf7->message( 'validation_error' ) ); //msg from admin settings;
+      $submission->set_response( $response['response'] ); //custom msg;
+    }
   }
 }
 
@@ -125,14 +136,15 @@ function cf7_pkf_attest_validate_form ( $result, $tags ) {
   $messages = WPCF7_ContactForm::get_current()->prop('messages');
   //print_r($messages);
   $formdata = $submission->get_posted_data();
+  //print_r($formdata);
   if( isset($formdata['pkf_attest_id']) && $formdata['pkf_attest_id'] > 0) { //Chequeamos que tenga id de curso
     if(!isValidIBAN($formdata['pkf_attest_iban'])) {
       $result->invalidate('pkf_attest_iban', __("Formato del IBAN incorrecto.", 'cf7_pkf_attest'));
     }
     $formdata['pkf_attest_estudiante_identidad'] = strtoupper($formdata['pkf_attest_estudiante_identidad']);
-    if($formdata['pkf_attest_estudiante_tipo_identidad'] == 0 && !isValidDNI($formdata['pkf_attest_estudiante_identidad'])) $result->invalidate('pkf_attest_estudiante_identidad', __("Formato del DNI incorrecto.", 'cf7_pkf_attest'));
-    else if($formdata['pkf_attest_estudiante_tipo_identidad'] == 1 && !isValidNIF($formdata['pkf_attest_estudiante_identidad'])) $result->invalidate('pkf_attest_estudiante_identidad', __("Formato del NIF incorrecto.", 'cf7_pkf_attest'));
-    else if($formdata['pkf_attest_estudiante_tipo_identidad'] == 4 && !isValidNIE($formdata['pkf_attest_estudiante_identidad'])) $result->invalidate('pkf_attest_estudiante_identidad', __("Formato del NIE incorrecto.", 'cf7_pkf_attest'));
+    if($formdata['pkf_attest_estudiante_tipo_identidad'][0] == 0 && !isValidNIF($formdata['pkf_attest_estudiante_identidad'])) $result->invalidate('pkf_attest_estudiante_identidad', __("Formato del DNI incorrecto.", 'cf7_pkf_attest'));
+    else if($formdata['pkf_attest_estudiante_tipo_identidad'][0] == 1 && !isValidCIF($formdata['pkf_attest_estudiante_identidad']))  $result->invalidate('pkf_attest_estudiante_identidad', __("Formato del NIF incorrecto.", 'cf7_pkf_attest'));
+    else if($formdata['pkf_attest_estudiante_tipo_identidad'][0] == 4 && !isValidNIE($formdata['pkf_attest_estudiante_identidad']))  $result->invalidate('pkf_attest_estudiante_identidad', __("Formato del NIE incorrecto.", 'cf7_pkf_attest'));
 
     if($formdata['pkf_attest_estudiante_como_pagador'][0] != 1) {
       if($formdata['pkf_attest_receptor_nombre'] == '') $result->invalidate('pkf_attest_receptor_nombre', $messages['invalid_required']);
@@ -143,10 +155,12 @@ function cf7_pkf_attest_validate_form ( $result, $tags ) {
       if($formdata['pkf_attest_receptor_tipo_identidad'] == '') $result->invalidate('pkf_attest_receptor_tipo_identidad', $messages['invalid_required']);
 
       $formdata['pkf_attest_receptor_identidad'] = strtoupper($formdata['pkf_attest_receptor_identidad']);
+      //print_r ($formdata['pkf_attest_receptor_identidad']);
+      //print_r ($formdata['pkf_attest_receptor_tipo_identidad'][0]);
       if($formdata['pkf_attest_receptor_identidad'] == '') $result->invalidate('pkf_attest_receptor_identidad', $messages['invalid_required']);
-      else if($formdata['pkf_attest_receptor_tipo_identidad'] == 0 && !isValidDNI($formdata['pkf_attest_receptor_identidad'])) $result->invalidate('pkf_attest_receptor_identidad', __("Formato del DNI incorrecto.", 'cf7_pkf_attest'));
-      else if($formdata['pkf_attest_receptor_tipo_identidad'] == 1 && !isValidNIF($formdata['pkf_attest_receptor_identidad'])) $result->invalidate('pkf_attest_receptor_identidad', __("Formato del NIF incorrecto.", 'cf7_pkf_attest'));
-      else if($formdata['pkf_attest_receptor_tipo_identidad'] == 4 && !isValidNIE($formdata['pkf_attest_receptor_identidad'])) $result->invalidate('pkf_attest_receptor_identidad', __("Formato del NIE incorrecto.", 'cf7_pkf_attest'));
+      else if($formdata['pkf_attest_receptor_tipo_identidad'][0] == 0 && !isValidNIF($formdata['pkf_attest_receptor_identidad'])) { $result->invalidate('pkf_attest_receptor_identidad', __("Formato del DNI incorrecto.", 'cf7_pkf_attest')); }
+      else if($formdata['pkf_attest_receptor_tipo_identidad'][0] == 1 && !isValidCIF($formdata['pkf_attest_receptor_identidad'])) { $result->invalidate('pkf_attest_receptor_identidad', __("Formato del NIF incorrecto.", 'cf7_pkf_attest')); } 
+      else if($formdata['pkf_attest_receptor_tipo_identidad'][0] == 4 && !isValidNIE($formdata['pkf_attest_receptor_identidad'])) { $result->invalidate('pkf_attest_receptor_identidad', __("Formato del NIE incorrecto.", 'cf7_pkf_attest')); }
 
       if($formdata['pkf_attest_receptor_direccion'] == '') $result->invalidate('pkf_attest_receptor_direccion', $messages['invalid_required']);
 
@@ -172,7 +186,7 @@ add_filter('wpcf7_validate', 'cf7_pkf_attest_validate_form', 10, 2 );
 function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
   ob_start();
   $curso = getCurso($params['id']); 
-  //print_r($curso); ?>
+  print_r($curso); ?>
   <div id="inscripcion_pkf">
     [hidden pkf_attest_id "<?=$params['id'] ?>"]
     <?php if ($curso->plazasDisponibles > 0  ) {
@@ -199,8 +213,10 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
         <?php } ?>
         <div id='inscripcion_pkf_estudiante'>          
           <p><b><?php _e("Datos del alumno", 'cf7_pkf_attest'); ?></b></p>
-          <label><?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>
-          [text* pkf_attest_estudiante_nombre placeholder "<?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>"]</label>
+          <label><?php _e("Nombre", 'cf7_pkf_attest'); ?>
+          [text* pkf_attest_estudiante_nombre placeholder "<?php _e("Nombre", 'cf7_pkf_attest'); ?>"]</label>
+          <label><?php _e("Apellidos", 'cf7_pkf_attest'); ?>
+          [text* pkf_attest_estudiante_apellidos placeholder "<?php _e("Apellidos", 'cf7_pkf_attest'); ?>"]</label>
           <label><?php _e("Fecha de nacimiento", 'cf7_pkf_attest'); ?>
           [date* pkf_attest_estudiante_fecha_nacimiento]</label>
           <label><?php _e("Tipo de identifcación", 'cf7_pkf_attest'); ?>
@@ -222,24 +238,26 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
           <script>
             jQuery(document).ready(function() {
               jQuery("input[name='pkf_attest_estudiante_como_pagador[]']").click(function() {
-                console.log("click");
                 if(jQuery(this).is(":checked")) {
                   jQuery("#inscripcion_pkf_receptor").fadeOut(200);
                 } else {
                   jQuery("#inscripcion_pkf_receptor").fadeIn(300);
                 }
               });
+              document.addEventListener( 'wpcf7mailsent', function( event ) {
+                jQuery("#inscripcion_pkf_receptor").fadeOut(200);
+              });
            });
           </script>
           [checkbox pkf_attest_estudiante_como_pagador use_label_element default:1 "<?php _e("Los datos para facturar son los de la persona a inscribir.", 'cf7_pkf_attest'); ?>|1"]
           <div id='inscripcion_pkf_receptor' style='display: none;'>
             <p><b><?php _e("Datos de facturación", 'cf7_pkf_attest'); ?></b></p>
-            <label><?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>
-            [text pkf_attest_receptor_nombre placeholder "<?php _e("Nombre y apellidos", 'cf7_pkf_attest'); ?>"]</label>
+            <label><?php _e("Razón social", 'cf7_pkf_attest'); ?>
+            [text pkf_attest_receptor_nombre placeholder "<?php _e("Razón social", 'cf7_pkf_attest'); ?>"]</label>
             <label><?php _e("Fecha de nacimiento", 'cf7_pkf_attest'); ?>
             [date pkf_attest_receptor_fecha_nacimiento]</label>
             <label><?php _e("Tipo de identifcación", 'cf7_pkf_attest'); ?>
-            [select pkf_attest_receptor_tipo_identidad "DNI|0" "NIF|1" "NIE|4"]</label>
+            [select pkf_attest_receptor_tipo_identidad "DNI|2" "NIF|1" "NIE|4"]</label>
             <label><?php _e("Número de identificación", 'cf7_pkf_attest'); ?>
             [text pkf_attest_receptor_identidad placeholder "<?php _e("Número de identificación", 'cf7_pkf_attest'); ?>"]</label>
             <label><?php _e("Domicilio", 'cf7_pkf_attest'); ?>
@@ -332,57 +350,4 @@ function isValidIBAN ($iban) {
   while (strlen($x));
 
   return (int)$mod == 1;
-}
-
-function isValidDNI($dni){
-  $letra = substr($dni, -1);
-  $numeros = substr($dni, 0, -1);
-  $valido;
-  if (substr("TRWAGMYFPDXBNJZSQVHLCKE", $numeros%23, 1) == $letra && strlen($letra) == 1 && strlen ($numeros) == 8 ){
-    $valido=true;
-  }else{
-    $valido=false;
-  }
-}
-
-function isValidNIF($nif) {
-  $nif_codes = 'TRWAGMYFPDXBNJZSQVHLCKE';
-
-  $sum = (string) $this->getCifSum ($nif);
-  $n = 10 - substr($sum, -1);
-
-  if (preg_match ('/^[0-9]{8}[A-Z]{1}$/', $nif)) {
-    // DNIs
-    $num = substr($nif, 0, 8);
-
-    return ($nif[8] == $nif_codes[$num % 23]);
-  } elseif (preg_match ('/^[XYZ][0-9]{7}[A-Z]{1}$/', $nif)) {
-    // NIEs normales
-    $tmp = substr ($nif, 1, 7);
-    $tmp = strtr(substr ($nif, 0, 1), 'XYZ', '012') . $tmp;
-
-    return ($nif[8] == $nif_codes[$tmp % 23]);
-  } elseif (preg_match ('/^[KLM]{1}/', $nif)) {
-    // NIFs especiales
-    return ($nif[8] == chr($n + 64));
-  } elseif (preg_match ('/^[T]{1}[A-Z0-9]{8}$/', $nif)) {
-    // NIE extraño
-    return true;
-  }
-
-  return false;
-}
-
-function isValidNIE($nif){
-  if (preg_match('/^[XYZT][0-9][0-9][0-9][0-9][0-9][0-9][0-9][A-Z0-9]/', $nif)) {
-    for ($i = 0; $i < 9; $i ++){
-      $num[$i] = substr($nif, $i, 1);
-    }
-
-    if ($num[8] == substr(‘TRWAGMYFPDXBNJZSQVHLCKE’, substr(str_replace(array(‘X’,’Y’,’Z’), array(‘0′,’1′,’2’), $nif), 0, 8) % 23, 1)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 }

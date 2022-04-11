@@ -12,6 +12,7 @@ Para mostrar los datos del formulario simplemente metenos el código corto [curs
 * [curso_info_pago]
 * [curso_info_iban]
 * [curso_info_estudiante_nombre]
+* [curso_info_estudiante_apellidos]
 * [curso_info_estudiante_fecha_nacimiento]
 * [curso_info_estudiante_tipo_identidad]
 * [curso_info_estudiante_identidad]
@@ -43,4 +44,3 @@ Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest.
 TODO. 
 * Las formas de pago varian según se elige al contado o a plazos.
 * Revisar si es un curso gratuito
-* Si la llamada a la API da un error devolverlo al usuario e invalidar el envío https://stackoverflow.com/questions/36774134/wordpress-invalidate-cf7-after-api-call/49243202

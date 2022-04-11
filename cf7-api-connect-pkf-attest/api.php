@@ -30,7 +30,7 @@ function insertLead($payload_data) { //Inserta un lead
   } else {
     writeLog ("INSERTLEAD OK", $payload_data, $response);     
   }
-  return json_decode($response);
+  return array("http_code" => $curl_info['http_code'], "response" => $response);
 }
 
 function getCurso($id) { //Consigue los datos de un curso
@@ -54,11 +54,13 @@ function getCurso($id) { //Consigue los datos de un curso
   curl_close($curl); 
 
   if ($error) {
-    writeErrorLog ("GETCURSO CURL ERROR", $id, $response, $error, json_encode($curl_info)); 
+    writeErrorLog ("GETCURSO CURL ERROR", $id, $response, $error, json_encode($curl_info));
+    return array("http_code" => $curl_info['http_code'], "response" => $response);
   } else if ($curl_info['http_code'] != '200') {
     writeErrorLog ("GETCURSO API ERROR", $id, $response, $error, json_encode($curl_info)); 
+    return array("http_code" => $curl_info['http_code'], "response" => $response);
   } else {
-    writeLog ("GETCURSO OK", $id, $response);     
+    writeLog ("GET CURSO OK", $id, $response);     
   }
   return json_decode($response);
 }
