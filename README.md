@@ -42,5 +42,5 @@ Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest.
 * CSS personalizado: Campo para meter el CSS personalziado para los formularios. Todos los formualrios tienen #inscripcion_pkf como id principal para el desarrollo del CSS:
 
 TODO. 
-* Las formas de pago varian según se elige al contado o a plazos.
-* Revisar si es un curso gratuito
+* Las formas de pago varian según se elige al contado o a plazos y el IBAN es obligatorio según la forma de pago escogida.
+* ¿Qué campos hay que rellenar si es curso gratuito?
