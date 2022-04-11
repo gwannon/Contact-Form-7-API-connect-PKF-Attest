@@ -1,6 +1,6 @@
 # Contact-Form-7-API-connect-PKF-Attest
 
-Para generar el formualrio solament ehay que meter el código corto [curso id="código del curso"] en el formulario de contacto. Si queremos meter campos extras podemos meterlos en el propio formulario como contenido del código corto.
+Para generar el formualrio solamente hay que meter el código corto [curso id="código del curso"] en el formulario de contacto. Si queremos meter campos extras podemos meterlos en el propio formulario como contenido del código corto.
 Ejemplo de Uso:
 
 [curso id="6821"][acceptance politica-privacidad] Acepto la <a href="#">política de privacidad</a>. [/acceptance][/curso]
