@@ -73,7 +73,7 @@ function writeLog ($title, $data, $response) {
 
 function writeErrorLog ($title, $data, $response, $error, $curl_info) {
   $headers = array('Content-Type: text/html; charset=UTF-8');
-  wp_mail(get_option("_cf7_pkf_attest_email"), $title, $data."\n\n".$error."\n\n".$response."\n\n".$curl_info, $headers);
+  wp_mail(get_option("_cf7_pkf_attest_email"), $title, $data."<br/>-------------------<br/>".$error."<br/>-------------------<br/>".$response."<br/>-------------------<br/>".$curl_info, $headers);
   $fp = fopen(dirname(__FILE__)."/logs/error-".date("Y-m").".txt", 'a+');
   fwrite($fp, date("Y-m-d H:i:s")."|".$title."|".$data."|".$response."|".$error."|".$curl_info."\n");
   fwrite($fp, "-------------------------------------\n");
