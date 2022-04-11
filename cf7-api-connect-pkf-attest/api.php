@@ -24,11 +24,11 @@ function insertLead($payload_data) { //Inserta un lead
   curl_close($curl); 
 
   if ($err) {
-    writeErrorLog ("INSERTLEAD CURL ERROR", $payload_data, $err); 
+    writeErrorLog ("INSERTLEAD CURL ERROR", $payload_data, $response, $error, json_encode($curl_info)); 
   } else if ($curl_info['http_code'] != '200') {
-    writeErrorLog ("INSERTLEAD API ERROR", $payload_data, $response); 
+    writeErrorLog ("INSERTLEAD API ERROR", $payload_data, $response, $error, json_encode($curl_info)); 
   } else {
-    writeLog ("INSERTLEAD API OK", $payload_data, $response);     
+    writeLog ("INSERTLEAD OK", $payload_data, $response);     
   }
   return json_decode($response);
 }
@@ -49,31 +49,33 @@ function getCurso($id) { //Consigue los datos de un curso
     ),
   ));
   $response = curl_exec($curl);
-  $err = curl_error($curl);
+  $error = curl_error($curl);
   $curl_info = curl_getinfo($curl);
   curl_close($curl); 
 
-  if ($err) {
-    writeErrorLog ("GETCURSO CURL ERROR", $id, $err); 
+  if ($error) {
+    writeErrorLog ("GETCURSO CURL ERROR", $id, $response, $error, json_encode($curl_info)); 
   } else if ($curl_info['http_code'] != '200') {
-    writeErrorLog ("GETCURSO API ERROR", $id, $response); 
+    writeErrorLog ("GETCURSO API ERROR", $id, $response, $error, json_encode($curl_info)); 
   } else {
-    writeLog ("INSERTLEAD API OK", $id, $response);     
+    writeLog ("GETCURSO OK", $id, $response);     
   }
   return json_decode($response);
 }
 
 function writeLog ($title, $data, $response) {
-  $fp = fopen(dirname(__FILE__)."/logs/log.txt", 'a+');
+  $fp = fopen(dirname(__FILE__)."/logs/log-".date("Y-m").".txt", 'a+');
   fwrite($fp, date("Y-m-d H:i:s")."|".$title."|".$response."|".$data."\n");
   fwrite($fp, "-------------------------------------\n");
   fclose($fp);
   return;
 }
 
-function writeErrorLog ($title, $data, $response) {
-  $fp = fopen(dirname(__FILE__)."/logs/error.txt", 'a+');
-  fwrite($fp, date("Y-m-d H:i:s")."|".$title."|".$response."|".$data."\n");
+function writeErrorLog ($title, $data, $response, $error, $curl_info) {
+  $headers = array('Content-Type: text/html; charset=UTF-8');
+  wp_mail(get_option("_cf7_pkf_attest_email"), $title, $data."\n\n".$error."\n\n".$response."\n\n".$curl_info, $headers);
+  $fp = fopen(dirname(__FILE__)."/logs/error-".date("Y-m").".txt", 'a+');
+  fwrite($fp, date("Y-m-d H:i:s")."|".$title."|".$data."|".$response."|".$error."|".$curl_info."\n");
   fwrite($fp, "-------------------------------------\n");
   fclose($fp);
   return;

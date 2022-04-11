@@ -88,13 +88,13 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data) {
       "municipio" => $formdata['pkf_attest_receptor_ciudad'],
     ];
 
-    /*if ($curso->gratuito) {
+    if ($curso->gratuito) {
       unset($json['receptor']);
       unset($json['formaPago']);
       unset($json['iban']);
       unset($json['aPlazos']);
       unset($json['alumnoComoPagador']);
-    }*/
+    }
 
     //print_r($json);
     $response = insertLead(json_encode($json));

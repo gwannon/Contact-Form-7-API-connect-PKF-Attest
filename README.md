@@ -37,6 +37,7 @@ Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest.
 * URL final de la API: https://dominioapi.com/WebInscripciones/api
 * Usuario de la AP.
 * Contraseña de la API.
+* Email de aviso. Email al que se enviará un aviso en caso de que la API devuelva algún error.
 * CSS personalizado: Campo para meter el CSS personalziado para los formularios. Todos los formualrios tienen #inscripcion_pkf como id principal para el desarrollo del CSS:
 
 TODO. 
