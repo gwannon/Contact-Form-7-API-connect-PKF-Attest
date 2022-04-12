@@ -192,8 +192,6 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
     <?php if ($curso->plazasDisponibles > 0  ) {
       if($curso->preReserva) {
         //print_r($curso);
-        //TODO. Las formas de pago varian según se elige al contado o a plazos.
-        //TODO. Revisar si es un curso gratuito y lo de la preserva
         if ($curso->formatoAsistencia == 2) { ?>
           <label><?php _e("Asistencia al curso", 'cf7_pkf_attest'); ?>
           [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial", 'cf7_pkf_attest'); ?>|1"]</label>
