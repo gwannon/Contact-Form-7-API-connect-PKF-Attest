@@ -22,7 +22,6 @@ Para mostrar los datos del formulario simplemente metenos el código corto [curs
 * [curso_info_estudiante_telefono]
 * [curso_info_estudiante_email]
 * [curso_info_receptor_nombre] *
-* [curso_info_receptor_fecha_nacimiento] *
 * [curso_info_receptor_tipo_identidad] *
 * [curso_info_receptor_identidad] *
 * [curso_info_receptor_direccion] *

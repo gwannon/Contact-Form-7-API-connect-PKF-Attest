@@ -150,14 +150,12 @@ function cf7_pkf_attest_validate_form ( $result, $tags ) {
     if($formdata['pkf_attest_estudiante_como_pagador'][0] != 1) {
       if($formdata['pkf_attest_receptor_nombre'] == '') $result->invalidate('pkf_attest_receptor_nombre', $messages['invalid_required']);
 
-      if($formdata['pkf_attest_receptor_fecha_nacimiento'] == '') $result->invalidate('pkf_attest_receptor_fecha_nacimiento', $messages['invalid_required']);
-      else if(!wpcf7_is_date($formdata['pkf_attest_receptor_fecha_nacimiento'])) $result->invalidate('pkf_attest_receptor_fecha_nacimiento', $messages['invalid_date']);
+      /*if($formdata['pkf_attest_receptor_fecha_nacimiento'] == '') $result->invalidate('pkf_attest_receptor_fecha_nacimiento', $messages['invalid_required']);
+      else if(!wpcf7_is_date($formdata['pkf_attest_receptor_fecha_nacimiento'])) $result->invalidate('pkf_attest_receptor_fecha_nacimiento', $messages['invalid_date']);*/
 
       if($formdata['pkf_attest_receptor_tipo_identidad'] == '') $result->invalidate('pkf_attest_receptor_tipo_identidad', $messages['invalid_required']);
 
       $formdata['pkf_attest_receptor_identidad'] = strtoupper($formdata['pkf_attest_receptor_identidad']);
-      //print_r ($formdata['pkf_attest_receptor_identidad']);
-      //print_r ($formdata['pkf_attest_receptor_tipo_identidad'][0]);
       if($formdata['pkf_attest_receptor_identidad'] == '') $result->invalidate('pkf_attest_receptor_identidad', $messages['invalid_required']);
       else if($formdata['pkf_attest_receptor_tipo_identidad'][0] == 0 && !isValidNIF($formdata['pkf_attest_receptor_identidad'])) { $result->invalidate('pkf_attest_receptor_identidad', __("Formato del DNI incorrecto.", 'cf7_pkf_attest')); }
       else if($formdata['pkf_attest_receptor_tipo_identidad'][0] == 1 && !isValidCIF($formdata['pkf_attest_receptor_identidad'])) { $result->invalidate('pkf_attest_receptor_identidad', __("Formato del NIF incorrecto.", 'cf7_pkf_attest')); } 
@@ -256,8 +254,8 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
             <p><b><?php _e("Datos de facturación", 'cf7_pkf_attest'); ?></b></p>
             <label><?php _e("Razón social", 'cf7_pkf_attest'); ?>
             [text pkf_attest_receptor_nombre placeholder "<?php _e("Razón social", 'cf7_pkf_attest'); ?>"]</label>
-            <label><?php _e("Fecha de nacimiento", 'cf7_pkf_attest'); ?>
-            [date pkf_attest_receptor_fecha_nacimiento]</label>
+            <?php /* <label><?php _e("Fecha de nacimiento", 'cf7_pkf_attest'); ?>
+            [date pkf_attest_receptor_fecha_nacimiento]</label> */ ?>
             <label><?php _e("Tipo de identifcación", 'cf7_pkf_attest'); ?>
             [select pkf_attest_receptor_tipo_identidad "DNI|2" "NIF|1" "NIE|4"]</label>
             <label><?php _e("Número de identificación", 'cf7_pkf_attest'); ?>
