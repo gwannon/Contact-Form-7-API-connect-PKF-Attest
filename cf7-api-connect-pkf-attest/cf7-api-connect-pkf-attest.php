@@ -201,7 +201,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
   ob_start();
   $response = getCurso($params['id']); 
   $curso = json_decode($response['response']);
-   echo "<pre>"; print_r($curso); echo "</pre>"; ?>
+  //echo "<pre>"; print_r($curso); echo "</pre>"; ?>
   <div id="inscripcion_pkf">
     [hidden pkf_attest_id "<?=$params['id'] ?>"]
     <?php if ($curso->plazasDisponibles > 0  ) {
@@ -211,11 +211,11 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
           <label><?php _e("Asistencia al curso", 'cf7_pkf_attest'); ?>
           [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial (Videoconferencia)", 'cf7_pkf_attest'); ?>|1"]</label>
         <?php } else { ?>[hidden pkf_attest_asistencia "<?=$curso->formatoAsistencia ?>"]<?php }
-        if (!$curso->gratuito) { ?>
-            <label id="pkf_attest_plazos"><?php _e("Forma de pago", 'cf7_pkf_attest'); ?>
-            [select* pkf_attest_plazos include_blank "<?php _e("Al contado", 'cf7_pkf_attest'); ?>,0|0" "<?php _e("A plazos", 'cf7_pkf_attest'); ?>,1|1"]</label>
+        if (!$curso->gratuito) {
+          ?><label id="pkf_attest_plazos"><?php _e("Forma de pago", 'cf7_pkf_attest'); ?>
+            [select* pkf_attest_plazos include_blank "<?php _e("Al contado", 'cf7_pkf_attest'); ?>,0|0" <?php if($curso->aPlazos == 1) { ?>"<?php _e("A plazos", 'cf7_pkf_attest'); ?>,1|1"<?php } ?>]</label>
           <?php foreach ($curso->formasPago as $forma) {
-            $formas[] = $forma->descripcion.",".($forma->exigeCuenta ? "1" : "0").",".($forma->aPlazos ? "1" : "0")."|".$forma->formaPago;
+             $formas[] = $forma->descripcion.",".($forma->exigeCuenta ? "1" : "0").",".($forma->aPlazos ? "1" : "0")."|".$forma->formaPago;
           } ?>
           <label id="pkf_attest_pago"><?php _e("Tipo de pago", 'cf7_pkf_attest'); ?>
           [select* pkf_attest_pago include_blank "<?php echo implode ('" "', $formas); ?>"]</label>
