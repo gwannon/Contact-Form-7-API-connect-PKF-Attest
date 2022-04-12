@@ -39,6 +39,3 @@ Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest.
 * Contraseña de la API.
 * Email de aviso. Email al que se enviará un aviso en caso de que la API devuelva algún error.
 * CSS personalizado: Campo para meter el CSS personalizado para los formularios. Todos los formularios tienen #inscripcion_pkf como id principal para el desarrollo del CSS:
-
-TODO. 
-* Las formas de pago varian según se elige al contado o a plazos y el IBAN es obligatorio según la forma de pago escogida.

@@ -140,8 +140,22 @@ function cf7_pkf_attest_validate_form ( $result, $tags ) {
   $formdata = $submission->get_posted_data();
   //print_r($formdata);
   if( isset($formdata['pkf_attest_id']) && $formdata['pkf_attest_id'] > 0) { //Chequeamos que tenga id de curso
-    if(!isValidIBAN($formdata['pkf_attest_iban'])) {
-      $result->invalidate('pkf_attest_iban', __("Formato del IBAN incorrecto.", 'cf7_pkf_attest'));
+
+    $response = getCurso($formdata['pkf_attest_id']); 
+    $curso = json_decode($response['response']);
+
+    foreach ($curso->formasPago as $forma) {
+      if ($forma->formaPago == $formdata['pkf_attest_pago'][0]) {
+        $exige_cuenta = ($forma->exigeCuenta == 1 ? true : false);
+        break;
+      }
+    }
+
+    if($exige_cuenta) {
+      if(isset($formdata['pkf_attest_iban']) && $formdata['pkf_attest_iban'] == '') $result->invalidate('pkf_attest_iban', $messages['invalid_required']);
+      else if(isset($formdata['pkf_attest_iban']) && !isValidIBAN($formdata['pkf_attest_iban'])) {
+        $result->invalidate('pkf_attest_iban', __("Formato del IBAN incorrecto.", 'cf7_pkf_attest'));
+      }
     }
     $formdata['pkf_attest_estudiante_identidad'] = strtoupper($formdata['pkf_attest_estudiante_identidad']);
     if($formdata['pkf_attest_estudiante_tipo_identidad'][0] == 0 && !isValidNIF($formdata['pkf_attest_estudiante_identidad'])) $result->invalidate('pkf_attest_estudiante_identidad', __("Formato del DNI incorrecto.", 'cf7_pkf_attest'));
@@ -187,7 +201,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
   ob_start();
   $response = getCurso($params['id']); 
   $curso = json_decode($response['response']);
-  print_r($curso); ?>
+   echo "<pre>"; print_r($curso); echo "</pre>"; ?>
   <div id="inscripcion_pkf">
     [hidden pkf_attest_id "<?=$params['id'] ?>"]
     <?php if ($curso->plazasDisponibles > 0  ) {
@@ -196,19 +210,65 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
         if ($curso->formatoAsistencia == 2) { ?>
           <label><?php _e("Asistencia al curso", 'cf7_pkf_attest'); ?>
           [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial (Videoconferencia)", 'cf7_pkf_attest'); ?>|1"]</label>
-        <?php } else  { ?>[hidden pkf_attest_asistencia "<?=$curso->formatoAsistencia ?>"]<?php }
-        if (!$curso->gratuito) {
-          if ($curso->aPlazos) { ?>
-            <label><?php _e("Forma de pago", 'cf7_pkf_attest'); ?>
-            [select pkf_attest_plazos "<?php _e("Al contado", 'cf7_pkf_attest'); ?>|0" "<?php _e("A plazos", 'cf7_pkf_attest'); ?>|1"]</label>
-          <?php }
-          foreach ($curso->formasPago as $forma) {
-            $formas[] = $forma->descripcion."|".$forma->formaPago;
-          }?>
-          <label><?php _e("Tipo de pago", 'cf7_pkf_attest'); ?>
-          [select* pkf_attest_pago "<?php echo implode ('" "', $formas); ?>"]</label>
-          <label><?php _e("Cuenta bancaria (IBAN)", 'cf7_pkf_attest'); ?>
-          [text* pkf_attest_iban placeholder "<?php _e("Cuenta bancaria (IBAN)", 'cf7_pkf_attest'); ?>"]</label>
+        <?php } else { ?>[hidden pkf_attest_asistencia "<?=$curso->formatoAsistencia ?>"]<?php }
+        if (!$curso->gratuito) { ?>
+            <label id="pkf_attest_plazos"><?php _e("Forma de pago", 'cf7_pkf_attest'); ?>
+            [select* pkf_attest_plazos include_blank "<?php _e("Al contado", 'cf7_pkf_attest'); ?>,0|0" "<?php _e("A plazos", 'cf7_pkf_attest'); ?>,1|1"]</label>
+          <?php foreach ($curso->formasPago as $forma) {
+            $formas[] = $forma->descripcion.",".($forma->exigeCuenta ? "1" : "0").",".($forma->aPlazos ? "1" : "0")."|".$forma->formaPago;
+          } ?>
+          <label id="pkf_attest_pago"><?php _e("Tipo de pago", 'cf7_pkf_attest'); ?>
+          [select* pkf_attest_pago include_blank "<?php echo implode ('" "', $formas); ?>"]</label>
+          <label id="pkf_attest_iban" style="display: none;"><?php _e("Cuenta bancaria (IBAN)", 'cf7_pkf_attest'); ?>
+          [text pkf_attest_iban placeholder "<?php _e("Cuenta bancaria (IBAN)", 'cf7_pkf_attest'); ?>"]</label>
+
+          <script>
+            jQuery(document).ready(function() {
+              jQuery("#pkf_attest_iban").css("display", "none");
+              jQuery("#pkf_attest_iban input").attr("disabled", true);
+              jQuery("#pkf_attest_plazos select option").each(function(index) {
+                info = jQuery(this).text().split(',');
+                jQuery(this).attr("data-aPlazos", info[1]);
+                jQuery(this).html(info[0]);
+              });
+              jQuery("#pkf_attest_pago select option").each(function(index) {
+                info = jQuery(this).text().split(',');
+                jQuery(this).attr("data-exigecuenta", info[1]);
+                jQuery(this).attr("data-aplazos", info[2]);
+                jQuery(this).html(info[0]);
+                jQuery(this).attr("disabled", true);
+                jQuery(this).css("display", "none");
+              });
+              jQuery("#pkf_attest_plazos select").change(function() {
+                jQuery('#pkf_attest_pago select').prop('selectedIndex',0);
+                jQuery("#pkf_attest_iban").css("display", "none");
+                jQuery("#pkf_attest_iban input").attr("disabled", true);
+                var selection = jQuery("#pkf_attest_plazos select option:selected" ).data("aplazos");
+                jQuery("#pkf_attest_pago select option").each(function(index) {
+                  if(jQuery(this).data("aplazos") == selection) {
+                    jQuery(this).attr("disabled", false);
+                    jQuery(this).css("display", "block");
+                  } else {
+                    jQuery(this).attr("disabled", true);
+                    jQuery(this).css("display", "none");
+                  }
+                });
+              });
+              jQuery("#pkf_attest_pago select").change(function() {
+                var selection = jQuery("#pkf_attest_pago select option:selected" ).data("exigecuenta");
+                if(selection == 1) {
+                  jQuery("#pkf_attest_iban").css("display", "block");
+                  jQuery("#pkf_attest_iban input").attr("disabled", false);
+                } else  {
+                  jQuery("#pkf_attest_iban").css("display", "none");
+                  jQuery("#pkf_attest_iban input").attr("disabled", true);
+                }
+
+              });
+            });
+          </script>
+
+
         <?php } ?>
         <div id='inscripcion_pkf_estudiante'>          
           <p><b><?php _e("Datos del alumno", 'cf7_pkf_attest'); ?></b></p>
@@ -305,48 +365,3 @@ function cf7_pkf_attest_shortcode_mail($params = array(), $content = null) {
   return $html;
 }
 add_shortcode('curso_allinfo', 'cf7_pkf_attest_shortcode_mail');
-
-
-//Checks and validations
-function isValidIBAN ($iban) {
-  $iban = strtolower($iban);
-  $Countries = array(
-    'al'=>28,'ad'=>24,'at'=>20,'az'=>28,'bh'=>22,'be'=>16,'ba'=>20,'br'=>29,'bg'=>22,'cr'=>21,'hr'=>21,'cy'=>28,'cz'=>24,
-    'dk'=>18,'do'=>28,'ee'=>20,'fo'=>18,'fi'=>18,'fr'=>27,'ge'=>22,'de'=>22,'gi'=>23,'gr'=>27,'gl'=>18,'gt'=>28,'hu'=>28,
-    'is'=>26,'ie'=>22,'il'=>23,'it'=>27,'jo'=>30,'kz'=>20,'kw'=>30,'lv'=>21,'lb'=>28,'li'=>21,'lt'=>20,'lu'=>20,'mk'=>19,
-    'mt'=>31,'mr'=>27,'mu'=>30,'mc'=>27,'md'=>24,'me'=>22,'nl'=>18,'no'=>15,'pk'=>24,'ps'=>29,'pl'=>28,'pt'=>25,'qa'=>29,
-    'ro'=>24,'sm'=>27,'sa'=>24,'rs'=>22,'sk'=>24,'si'=>19,'es'=>24,'se'=>24,'ch'=>21,'tn'=>24,'tr'=>26,'ae'=>23,'gb'=>22,'vg'=>24
-  );
-  $Chars = array(
-    'a'=>10,'b'=>11,'c'=>12,'d'=>13,'e'=>14,'f'=>15,'g'=>16,'h'=>17,'i'=>18,'j'=>19,'k'=>20,'l'=>21,'m'=>22,
-    'n'=>23,'o'=>24,'p'=>25,'q'=>26,'r'=>27,'s'=>28,'t'=>29,'u'=>30,'v'=>31,'w'=>32,'x'=>33,'y'=>34,'z'=>35
-  );
-
-  if (strlen($iban) != $Countries[ substr($iban,0,2) ]) { return false; }
-
-  $MovedChar = substr($iban, 4) . substr($iban,0,4);
-  $MovedCharArray = str_split($MovedChar);
-  $NewString = "";
-
-  foreach ($MovedCharArray as $k => $v) {
-
-    if ( !is_numeric($MovedCharArray[$k]) ) {
-      $MovedCharArray[$k] = $Chars[$MovedCharArray[$k]];
-    }
-    $NewString .= $MovedCharArray[$k];
-  }
-  if (function_exists("bcmod")) { return bcmod($NewString, '97') == 1; }
-
-  // http://au2.php.net/manual/en/function.bcmod.php#38474
-  $x = $NewString; $y = "97";
-  $take = 5; $mod = "";
-
-  do {
-    $a = (int)$mod . substr($x, 0, $take);
-    $x = substr($x, $take);
-    $mod = $a % $y;
-  }
-  while (strlen($x));
-
-  return (int)$mod == 1;
-}
