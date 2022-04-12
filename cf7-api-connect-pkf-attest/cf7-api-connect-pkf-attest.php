@@ -87,6 +87,7 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data, &$abort, $submission) {
       "razonSocial" => $formdata['pkf_attest_receptor_nombre'],
       "tipoIdentificador" => $formdata['pkf_attest_receptor_tipo_identidad'][0],
       "numIdentificador" => strtoupper($formdata['pkf_attest_receptor_identidad']),
+      //"fechaNac" => $formdata['pkf_attest_receptor_fecha_nacimiento'],
       "domicilio" => $formdata['pkf_attest_receptor_direccion'],
       "cp" => $formdata['pkf_attest_receptor_cp'],
       "telefono1" => $formdata['pkf_attest_receptor_telefono'],
@@ -99,7 +100,7 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data, &$abort, $submission) {
       unset($json['formaPago']);
       unset($json['iban']);
       unset($json['aPlazos']);
-      unset($json['alumnoComoPagador']);
+      //unset($json['alumnoComoPagador']);
     }
 
     //print_r($json);
@@ -194,7 +195,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
         //print_r($curso);
         if ($curso->formatoAsistencia == 2) { ?>
           <label><?php _e("Asistencia al curso", 'cf7_pkf_attest'); ?>
-          [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial", 'cf7_pkf_attest'); ?>|1"]</label>
+          [select pkf_attest_asistencia "<?php _e("Presencial", 'cf7_pkf_attest'); ?>|0" "<?php _e("No presencial (Videoconferencia)", 'cf7_pkf_attest'); ?>|1"]</label>
         <?php } else  { ?>[hidden pkf_attest_asistencia "<?=$curso->formatoAsistencia ?>"]<?php }
         if (!$curso->gratuito) {
           if ($curso->aPlazos) { ?>
@@ -204,10 +205,10 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
           foreach ($curso->formasPago as $forma) {
             $formas[] = $forma->descripcion."|".$forma->formaPago;
           }?>
-          <label><?php _e("Forma de pago", 'cf7_pkf_attest'); ?>
+          <label><?php _e("Tipo de pago", 'cf7_pkf_attest'); ?>
           [select* pkf_attest_pago "<?php echo implode ('" "', $formas); ?>"]</label>
-          <label><?php _e("IBAN de la cuenta", 'cf7_pkf_attest'); ?>
-          [text* pkf_attest_iban placeholder "<?php _e("IBAN de la cuenta", 'cf7_pkf_attest'); ?>"]</label>
+          <label><?php _e("Cuenta bancaria (IBAN)", 'cf7_pkf_attest'); ?>
+          [text* pkf_attest_iban placeholder "<?php _e("Cuenta bancaria (IBAN)", 'cf7_pkf_attest'); ?>"]</label>
         <?php } ?>
         <div id='inscripcion_pkf_estudiante'>          
           <p><b><?php _e("Datos del alumno", 'cf7_pkf_attest'); ?></b></p>
@@ -217,7 +218,7 @@ function cf7_pkf_attest_shortcode_form ($params = array(), $content = null) {
           [text* pkf_attest_estudiante_apellidos placeholder "<?php _e("Apellidos", 'cf7_pkf_attest'); ?>"]</label>
           <label><?php _e("Fecha de nacimiento", 'cf7_pkf_attest'); ?>
           [date* pkf_attest_estudiante_fecha_nacimiento]</label>
-          <label><?php _e("Tipo de identifcación", 'cf7_pkf_attest'); ?>
+          <label><?php _e("Tipo de identificación", 'cf7_pkf_attest'); ?>
           [select pkf_attest_estudiante_tipo_identidad "DNI|0" "NIF|1" "NIE|4"]</label>
           <label><?php _e("Número de identificación", 'cf7_pkf_attest'); ?>
           [text* pkf_attest_estudiante_identidad placeholder "<?php _e("Número de identificación", 'cf7_pkf_attest'); ?>"]</label>

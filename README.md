@@ -42,5 +42,3 @@ Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest.
 
 TODO. 
 * Las formas de pago varian según se elige al contado o a plazos y el IBAN es obligatorio según la forma de pago escogida.
-* ¿Qué campos hay que rellenar si es curso gratuito?
-* Si falla el obtener el curso que devuelve un mensaje de Cursos no disponible temporalmente.
