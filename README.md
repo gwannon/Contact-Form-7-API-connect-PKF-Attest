@@ -1,6 +1,6 @@
 # Contact-Form-7-API-connect-PKF-Attest
 
-Para generar el formualrio solamente hay que meter el código corto [curso id="código del curso"] en el formulario de contacto. Si queremos meter campos extras podemos meterlos en el propio formulario como contenido del código corto.
+Para generar el formulario solamente hay que meter el código corto [curso id="código del curso"] en el formulario de contacto. Si queremos meter campos extras podemos meterlos en el propio formulario como contenido del código corto.
 Ejemplo de Uso:
 
 [curso id="6821"][acceptance politica-privacidad] Acepto la <a href="#">política de privacidad</a>. [/acceptance][/curso]
@@ -35,7 +35,7 @@ Para mostrar los datos del formulario simplemente metenos el código corto [curs
 Para configurar el plugin tenemos que entrar en WP-Admin > Ajustes > PKF Attest. Campos:
 
 * URL final de la API: https://dominioapi.com/WebInscripciones/api
-* Usuario de la AP.
+* Usuario de la API.
 * Contraseña de la API.
 * Email de aviso. Email al que se enviará un aviso en caso de que la API devuelva algún error.
 * CSS personalizado: Campo para meter el CSS personalizado para los formularios. Todos los formularios tienen #inscripcion_pkf como id principal para el desarrollo del CSS:
