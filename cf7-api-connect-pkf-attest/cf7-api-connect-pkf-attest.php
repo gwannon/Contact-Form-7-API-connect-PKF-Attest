@@ -119,34 +119,36 @@ function cf7_pkf_attest_before_send_mail(&$wpcf7_data, &$abort, $submission) {
 
 // Add fields of the shortocedee to show in add-on
 function filter_wpcf7_collect_mail_tags( $mailtags ) { 
-  // make filter magic happen here... 
-  $mailtags[] = 'pkf_attest_asistencia';
-  $mailtags[] = 'pkf_attest_plazos';
-  $mailtags[] = 'pkf_attest_pago';
-  $mailtags[] = 'pkf_attest_iban';
-  
-  $mailtags[] = 'pkf_attest_estudiante_nombre';
-  $mailtags[] = 'pkf_attest_estudiante_apellidos';
-  $mailtags[] = 'pkf_attest_estudiante_fecha_nacimiento';
-  $mailtags[] = 'pkf_attest_estudiante_tipo_identidad';
-  $mailtags[] = 'pkf_attest_estudiante_identidad';
-  $mailtags[] = 'pkf_attest_estudiante_direccion';
-  $mailtags[] = 'pkf_attest_estudiante_cp';
-  $mailtags[] = 'pkf_attest_estudiante_ciudad';
-  $mailtags[] = 'pkf_attest_estudiante_telefono';
-  
-  $mailtags[] = 'pkf_attest_estudiante_email';
-  
-  $mailtags[] = 'pkf_attest_estudiante_como_pagador';
-  $mailtags[] = 'pkf_attest_receptor_nombre';
-  $mailtags[] = 'pkf_attest_receptor_fecha_nacimiento';
-  $mailtags[] = 'pkf_attest_receptor_tipo_identidad';
-  $mailtags[] = 'pkf_attest_receptor_identidad';
-  $mailtags[] = 'pkf_attest_receptor_direccion';
-  $mailtags[] = 'pkf_attest_receptor_cp';
-  $mailtags[] = 'pkf_attest_receptor_ciudad';
-  $mailtags[] = 'pkf_attest_receptor_telefono';
-  $mailtags[] = 'pkf_attest_receptor_email';
+  $currentform = WPCF7_ContactForm::get_current();
+  if(has_shortcode($currentform->get_properties()['form'], 'curso')) {
+    $mailtags[] = 'pkf_attest_asistencia';
+    $mailtags[] = 'pkf_attest_plazos';
+    $mailtags[] = 'pkf_attest_pago';
+    $mailtags[] = 'pkf_attest_iban';
+    
+    $mailtags[] = 'pkf_attest_estudiante_nombre';
+    $mailtags[] = 'pkf_attest_estudiante_apellidos';
+    $mailtags[] = 'pkf_attest_estudiante_fecha_nacimiento';
+    $mailtags[] = 'pkf_attest_estudiante_tipo_identidad';
+    $mailtags[] = 'pkf_attest_estudiante_identidad';
+    $mailtags[] = 'pkf_attest_estudiante_direccion';
+    $mailtags[] = 'pkf_attest_estudiante_cp';
+    $mailtags[] = 'pkf_attest_estudiante_ciudad';
+    $mailtags[] = 'pkf_attest_estudiante_telefono';
+    
+    $mailtags[] = 'pkf_attest_estudiante_email';
+    
+    $mailtags[] = 'pkf_attest_estudiante_como_pagador';
+    $mailtags[] = 'pkf_attest_receptor_nombre';
+    $mailtags[] = 'pkf_attest_receptor_fecha_nacimiento';
+    $mailtags[] = 'pkf_attest_receptor_tipo_identidad';
+    $mailtags[] = 'pkf_attest_receptor_identidad';
+    $mailtags[] = 'pkf_attest_receptor_direccion';
+    $mailtags[] = 'pkf_attest_receptor_cp';
+    $mailtags[] = 'pkf_attest_receptor_ciudad';
+    $mailtags[] = 'pkf_attest_receptor_telefono';
+    $mailtags[] = 'pkf_attest_receptor_email';
+  }
   return $mailtags; 
 }; 
 add_filter( 'wpcf7_collect_mail_tags', 'filter_wpcf7_collect_mail_tags', 10, 1 );
